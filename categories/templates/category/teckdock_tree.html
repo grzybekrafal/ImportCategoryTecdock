@@ -1,0 +1,262 @@
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+<style>
+.btn-category {
+
+    font-size: 0.5rem !important;
+    border-radius: 0.3rem !important;
+}
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+
+
+          <div id="app">
+             <div class="col-12" style="display:none" ref="save_box">
+                <div class="alert alert-primary" v-show="info_success!=''"  role="alert">
+                    [[info_success]]
+                </div>
+                <div class="alert alert-danger" v-show="info_error!=''"   role="alert">
+                    [[info_error]]
+                </div>
+             </div>
+
+             <tree
+                  :data="treeData"
+                  :options="treeOptions"
+                  ref="tree"
+                  @node:expanded="rozwijamElement"
+                  @node:indeterminate="zwijamElement"
+
+                  @node:checked=""
+                />
+
+                <div slot-scope="{ node }" class="node-container w-100" :class="{ 'new_item': node.data.isNewItem }"
+                        :id="node.data.randID !== undefined ? node.data.randID: ''"
+                        >
+                     <div class="w-100"  :style="showIfSet(node.data)" >
+                         <div v-if="node.data.id > 1" class="" >[[ node.text ]] ([[node.data.type]])</div>
+                         <div v-else >Start kategorii</div>
+                         <div><small style="color: red" :id="gen_id_name('text_name', node.data.id)">[[node.data.category_name]]</small></div>
+                         <div><small style="color: red" :id="gen_id_name('text_path', node.data.id)">[[node.data.category_path]]</small></div>
+                         <input type="hidden" :id="gen_id_name('input_id', node.data.id)" name="category_id" :value="node.data.category_id" @change="save_category_id(node.data, $event)">
+                         <input type="hidden" :id="gen_id_name('input_name', node.data.id)" name="category_name" :value="node.data.category_name" @change="save_category_name(node.data, $event)">
+                         <input type="hidden" :id="gen_id_name('input_path', node.data.id)" name="category_path" :value="node.data.category_path" @change="save_category_path(node.data, $event)">
+                         <div v-if="node.data.id > 1">
+                            <button type="button" class='btn btn-sm btn-category btn-danger float-end' style="margin-left: 10px" @click.stop="setCategory(node.data)">Ustaw kategorię [[node.data.id ]]</button>
+                         </div>
+                     </div>
+                  </div>
+              </div>
+        <div>
+    </div>
+
+<style>
+    .new_item {
+        background: #ffc10769;
+    }
+</style>
+<script>
+    var categories_json_teckdock  = '{{ json_category_teckdock|safe  }}';
+    var categories_teckdock = JSON.parse(categories_json_teckdock);
+
+    new Vue({
+        delimiters: ['[[', ']]'],
+        el: '#app',
+        data: () => ({
+          saved: false,
+          correct_saved: false,
+          info_error: '',
+          info_success: '',
+          treeData: getTreeData(),
+          treeOptions: {
+            propertyNames: {
+              text: 'text',
+              children: 'children',
+              state: 'OPTIONS',
+              editing: true
+            },
+            dnd: true,
+            checkbox: false
+          }
+        }),
+        mounted() {
+            this.$refs.tree.$on('node:editing:start', (node) => {
+            })
+            this.$refs.tree.$on('node:editing:stop', (node, isTextChanged) => {
+            })
+
+            this.$nextTick(()=>{
+                let self = this
+                var saveBoxElement = self.$refs.save_box;
+                saveBoxElement.style.display = 'block';
+            });
+        },
+        computed: {
+
+        },
+        watch: {
+            treeData: {
+                handler(newVal, oldVal) {
+                    console.log('Tree data changed:', newVal);
+                    // Additional logic if needed
+                },
+                deep: true // To detect changes in nested properties
+            }
+        },
+        methods: {
+             rozwijamElement(node) {
+                let ids = [];
+
+            if (node.children && node.children.length > 0) {
+                for (let i = 0; i < node.children.length; i++) {
+                  ids.push(node.children[i].id);
+                }
+              }
+
+             const postData = {
+              ids: ids // The array of ids
+                };
+            axios.post('/admin/category/getTeckdockInfoById', postData)
+              .then((response) => {
+                        response.data.forEach(item => {
+                            if (node.children && node.children.length > 0) {
+                                for (let i = 0; i < node.children.length; i++) {
+                                    console.log(node.children[i].data.id);
+                                    if (node.children[i].data.id == item.id) {
+                                        node.children[i].data.category_id = item.category_id;
+                                        node.children[i].data.category_name = item.category_name;
+                                        node.children[i].data.category_path = item.category_path;
+                                    }
+                                }
+                            }
+                        });
+              })
+              .catch((error) => {
+              });
+
+            this.$nextTick(() => {
+
+            });
+            },
+            zwijamElement(node) {
+                console.log('Node expanded:', node);
+
+                alert('zwijamElement')
+                this.$nextTick(() => {
+
+                });
+            },
+
+            save_category_id(nodeData, event) {
+                const newValue = event.target.value;
+                this.$set(nodeData, 'category_id', newValue); // Ensure reactivity
+                console.log('New category category_id:', newValue);
+                this.$nextTick(() => {
+                    console.log('DOM updated after name change');
+                });
+            },
+            save_category_name(nodeData, event) {
+                const newValue = event.target.value;
+                this.$set(nodeData, 'category_name', newValue); // Ensure reactivity
+                console.log('New category name:', newValue);
+                this.$nextTick(() => {
+                    console.log('DOM updated after name change');F
+                });
+
+            },
+            save_category_path(nodeData, event) {
+                const newValue = event.target.value;
+                this.$set(nodeData, 'category_path', newValue); // Ensure reactivity
+                console.log('New category category_path:', newValue);
+                this.$nextTick(() => {
+                    console.log('DOM updated after name change');
+                });
+            },
+
+            gen_id_name(text, id){
+                return text+'_'+id;
+            },
+            setCategory(node) {
+                $('#modal_window_category').modal('show');
+                $('#modal_window_category_input_teckdock_name').val(node.name);
+                $('#modal_window_category_input_teckdock_id').val(node.id);
+                $('#textbox_teckdock_name').text(node.name);
+                $('#textbox_teckdock_id').text(node.id);
+                $('#modal_window_category_input_path').text(node.path);
+            },
+            showIfSet(data){
+                if(data.category_id >= 1 ){
+                    return "background: aliceblue; color:blue";
+                }
+                return "color: black";
+            },
+
+            buttonTextShowHide(node) {
+                if(node.data.show){
+                    return "Ukryj";
+                } else {
+                    return "Edytuj Nazwę";
+                }
+                return "Edytuj Nazwę";
+            },
+            showBtnToAddNewCategory(node){
+                if(node.data.id){
+                    return true;
+                }
+                return true;
+            },
+            logDragStart(node) {
+            },
+            logDragFinish(targetNode, distinationNode) {
+                //console.log(`Stop dragging: [TARGET]${targetNode.text}`)
+            },
+            editNode(node, e) {
+                node.startEditing()
+            },
+            removeNode(node) {
+                if (confirm('Czy na pewno chcesz usunąć ? ')) {
+                  node.remove()
+                }
+            },
+            addChildNode(node) {
+                if (node.enabled()) {
+                    const newNode = node.append('Nowa kategoria');
+                    newNode.data.isNewItem = true;
+                    newNode.data.randID =  Math.floor(Math.random()*100000);
+                    node.expand()
+                    this.$nextTick(() => {
+                        setTimeout(() => {
+                            const newItemElement = document.getElementById(newNode.data.randID);
+                            if (newItemElement) {
+                                  newItemElement.scrollIntoView({
+                                      block: 'center' // vertically center the element
+                                  });
+                            }
+                        }, 100);
+                    });
+                }
+            },
+            showMoreOption(node) {
+                //console.log(node.data.name);
+                //node.data.show = !node.data.show
+                node.startEditing()
+            },
+            saveTreeToJson(){
+
+
+            }
+        },
+      })
+
+    function getTreeData() {
+        return  categories_teckdock;
+    }
+</script>
+
+{% include "template_elements/pagination.html" %}
+{% endblock content %}
+{% block javascripts %}
+{% endblock javascripts %}

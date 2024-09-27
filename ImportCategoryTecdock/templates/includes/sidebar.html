@@ -1,0 +1,43 @@
+    <div class="sidebar" data-color="purple" data-background-color="white" >
+      <div class="sidebar-wrapper">
+          <div class="logo">
+            <a  rel="noopener noreferrer" href="/" class="simple-text logo-normal" title="Nordeno">
+                Nordeno
+            </a>
+          </div>
+        <ul class="nav">
+
+          <li class="nav-item {% if '/admin/category' == request.path %} active {% endif %}">
+            <a class="nav-link" href="/admin/category">
+              <i class="material-icons">account_tree</i>
+              <p>Drzewo kategorii</p>
+            </a>
+          </li>
+          <li class="nav-item {% if '/admin/teckdock' == request.path %} active {% endif %}">
+            <a class="nav-link" href="/admin/teckdock">
+              <i class="material-icons">account_tree</i>
+              <p>Drzewo Teckdock</p>
+            </a>
+          </li>
+
+          {% if user.is_superuser %}
+          <li class="nav-item {% if '/super_admin/' == request.path %} active {% endif %}">
+            <a class="nav-link" href="/super_admin/" target="_blank">
+              <i class="material-icons">admin_panel_settings</i>
+              <p>Admin panel</p>
+            </a>
+          </li>
+          {% endif %}
+
+          <li class="nav-item ">
+            <a class="nav-link" href="{% url 'logout' %}" >
+              <i class="material-icons">directions_run</i>
+              <p>Logout</p>
+            </a>
+          </li>
+
+        </ul>
+      </div>
+
+
+    </div>

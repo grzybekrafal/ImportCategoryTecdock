@@ -1,0 +1,27 @@
+{% if form.non_field_errors|length  > 0  or  form.errors|length  > 0 or  form.non_field_errors|length  > 0  %}
+
+<div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header card-header-warning">
+          <h4 class="card-title">List błędów</h4>
+        </div>
+        <div class="card-body">
+
+            <div class="col-12">
+                <small  style="color:#f44336 ">
+                    {{ form.non_field_errors }}
+                </small>
+                <small  style="color:#f44336 ">
+                    {{ form.errors }}
+                </small>
+                <small  style="color:#f44336 ">
+                    {{ form.non_field_errors }}
+                </small>
+            </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+{% endif %}

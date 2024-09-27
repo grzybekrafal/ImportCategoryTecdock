@@ -1,0 +1,180 @@
+<style>
+.btn-category {
+    padding: 0.40625rem 0.5rem !important;
+    font-size: 0.5rem !important;
+    border-radius: 0.3rem !important;
+}
+.small-tree{
+    font-size: 10px;
+}
+
+.small-tree .tree-arrow.has-child:after{
+    height: 4px;
+    width: 4px;
+}
+
+.btn-small-tree{
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+    margin-left: 15px;
+    font-size: 15px !important;
+}
+
+.small-tree.active a{
+    color: blue;
+    font-weight: bold;
+}
+
+.small-tree a{
+    white-space: pre-wrap;
+    white-space: -moz-pre-wrap;
+    white-space: -pre-wrap;
+    white-space: -o-pre-wrap;
+    word-wrap: break-word;
+}
+.small-tree{
+    background: balck
+}
+
+.prefix-sm{
+    font-size: 14px;
+    margin-right: 3px;
+    float: left;
+    padding-top: 5px;
+}
+
+.tree_link_text{
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.not_active{
+    color:red
+}
+
+.not_in_www{
+    opacity: 0.5;
+}
+
+</style>
+
+
+<div id="app" class="small-tree">
+    <b-row>
+        <b-col cols="12">
+            <tree
+                :data="treeData"
+                :options="treeOptions"
+                ref="tree"
+                @node:checked=""
+            />
+            <div slot-scope="{ node }" class="node-container w-100">
+                <div class="small-tree float-left" v-bind:class="is_active(node)">
+                    <b-link :href="createUrl(node)"
+                            class="tree_link_text"
+                            :class="setExtraClass(node.data)"
+                            @click.stop="">[[ node.text ]]<b style="color:red; font-size: 12px"> [[ getCount(node) ]] </b>
+
+                    </b-link>
+                </div>
+            </div>
+        </b-col>
+    </b-row>
+    <hr>
+</div>
+
+<script>
+    {% if url_for_category != '' and  url_for_category != None %}
+        var url_for_category = '{{url_for_category}}';
+    {% else %}
+        var url_for_category = '/admin/products';
+    {% endif %}
+
+    var categories_json = '{{ json_category|safe  }}';
+    var categories = JSON.parse(categories_json);
+    var category_selected = '{{category}}'
+
+    var id =  '{{ id }}';
+
+    new Vue({
+        delimiters: ['[[', ']]'],
+        el: '#app',
+        data: () => ({
+          category_selected: category_selected,
+          treeData: getTreeData(),
+          category:  '{{category}}',
+          products_count: JSON.parse('{{ items_in_category|safe  }}'),
+          url: url_for_category,
+          treeOptions: {
+            propertyNames: {
+              text: 'text',
+              icon: '',
+              children: 'children',
+              state: 'OPTIONS',
+              editing: false,
+            },
+            dnd: false,
+            checkbox: false,
+          }
+        }),
+         mounted() {
+        	this.$refs.tree.$on('node:editing:start', (node) => {
+          })
+        	this.$refs.tree.$on('node:editing:stop', (node, isTextChanged) => {
+          })
+        },
+        computed: {
+
+        },
+        methods: {
+            setExtraClass(data){
+                let extraClass = ''
+                if (data.active == 0){
+                    extraClass += " not_active"
+                }
+                return extraClass
+            },
+            getCount(node){
+                if(this.products_count[node.id] !== undefined){
+                    return "("+this.products_count[node.id]+")";
+                }
+                return "";
+            },
+            is_active(node){
+                if (this.category == node.id){
+                    return "active"
+                } else {
+                    return  "not_active"
+                }
+            },
+            createUrl(node){
+                if (this.url == '/admin/category/view')
+                {
+                    return this.url + "/"+node.id;
+                }
+                return this.url + "?category="+node.id;
+            },
+            selectThisCategory(node) {
+
+            },
+            hasChildren(node) {
+                if(node.children.length == 0){
+                    return true;
+                }
+                return false;
+            },
+            removeNode(node) {
+                if (confirm('Czy na pewno chcesz usunąć ? ')) {
+                  node.remove()
+                }
+            },
+        },
+      })
+
+    function getTreeData() {
+       return  categories;
+    }
+
+
+
+</script>

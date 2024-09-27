@@ -1,0 +1,219 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Page 404 {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+<style>
+.btn-category {
+    padding: 0.40625rem 0.5rem !important;
+    font-size: 0.5rem !important;
+    border-radius: 0.3rem !important;
+}
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="row">
+  <div class="col-md-12">
+      
+    <div class="card">
+      <div class="card-header card-header-primary">
+        <h4 class="card-title ">Edycja Kategorii</h4>
+      </div>
+      <div class="card-body"  >
+          <div id="app">
+             <div class="col-12" style="display:none" ref="save_box">
+                <div class="alert alert-primary" v-show="info_success!=''"  role="alert">
+                    [[info_success]]
+                </div>
+
+                <div class="alert alert-danger" v-show="info_error!=''"   role="alert">
+                    [[info_error]]
+                </div>
+                <!--
+                 <button type="button" class="btn btn-success" v-on:click="saveTreeToJson()">
+                     Zapisz drzewko kategorii
+                 </button>
+                 -->
+             </div>
+             <tree
+                  :data="treeData"
+                  :options="treeOptions"
+                  ref="tree"
+                  @node:checked=""
+                  @node:dragging:start="logDragStart"
+                  @node:dragging:finish="logDragFinish"
+                />
+
+                <div slot-scope="{ node }" class="node-container w-100" :class="{ 'new_item': node.data.isNewItem }"
+                        :id="node.data.randID !== undefined ? node.data.randID: ''"
+                        >
+                     <div class="w-100"  >
+                         [[ node.text ]]
+                       <!-- <button type="button" class='btn btn-sm btn-category btn-danger' @click.stop="removeNode(node)">Usuń</button> -->
+                       <!-- <button type="button"  href="#" class='btn btn-sm btn-category btn-success' v-show="showBtnToAddNewCategory(node)" @click.stop="addChildNode(node)">Dodaj podkategorię</button> -->
+                        <button type="button"  href="#" class='btn btn-sm btn-category btn-success' @click.stop="showMoreOption(node)">
+                            [[buttonTextShowHide(node)]]
+                        </button>
+                     </div>
+
+                    <div v-show="node.data.show">
+                        <div class="mt-8">
+                            <div class="form-group">
+                                <label>Nazwa kategorii</label>
+                                <input type="text" class="form-control mb-0" v-on:click.stop.prevent="" v-model="node.text" placeholder="Nazwa kategorii">
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+              </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+    .new_item {
+        background: #ffc10769;
+    }
+</style>
+<script>
+
+    var categories_json  = '{{ json_category|safe  }}';
+    var categories = JSON.parse(categories_json);
+
+    new Vue({
+        delimiters: ['[[', ']]'],
+        el: '#app',
+        data: () => ({
+          saved: false,
+          correct_saved: false,
+          info_error: '',
+          info_success: '',
+          treeData: getTreeData(),
+          treeOptions: {
+            propertyNames: {
+              text: 'text',
+              children: 'children',
+              state: 'OPTIONS',
+              editing: true
+            },
+            dnd: true,
+            checkbox: false
+          }
+        }),
+        mounted() {
+            this.$refs.tree.$on('node:editing:start', (node) => {
+            })
+            this.$refs.tree.$on('node:editing:stop', (node, isTextChanged) => {
+            })
+
+            this.$nextTick(()=>{
+                let self = this
+                var saveBoxElement = self.$refs.save_box;
+                saveBoxElement.style.display = 'block';
+            });
+        },
+        computed: {
+
+        },
+        methods: {
+            buttonTextShowHide(node) {
+                if(node.data.show){
+                    return "Ukryj";
+                } else {
+                    return "Edytuj Nazwę";
+                }
+                return "Edytuj Nazwę";
+            },
+            showBtnToAddNewCategory(node){
+                if(node.data.id){
+                    return true;
+                }
+                return true;
+            },
+            logDragStart(node) {
+            },
+            logDragFinish(targetNode, distinationNode) {
+                //console.log(`Stop dragging: [TARGET]${targetNode.text}`)
+            },
+            editNode(node, e) {
+                node.startEditing()
+            },
+            removeNode(node) {
+                if (confirm('Czy na pewno chcesz usunąć ? ')) {
+                  node.remove()
+                }
+            },
+            addChildNode(node) {
+                if (node.enabled()) {
+                    const newNode = node.append('Nowa kategoria');
+                    newNode.data.isNewItem = true;
+                    newNode.data.randID =  Math.floor(Math.random()*100000);
+                    node.expand()
+                    this.$nextTick(() => {
+                        setTimeout(() => {
+                            const newItemElement = document.getElementById(newNode.data.randID);
+                            if (newItemElement) {
+                                  newItemElement.scrollIntoView({
+                                      block: 'center' // vertically center the element
+                                  });
+                            }
+                        }, 100);
+                    });
+
+                }
+            },
+            showMoreOption(node) {
+                //console.log(node.data.name);
+                //node.data.show = !node.data.show
+                node.startEditing()
+            },
+            saveTreeToJson(){
+
+                this.info_success = ''
+                this.info_success = ''
+
+                const tree = this.$refs.tree.toJSON();
+                this.saved = false;
+                this.correct_saved = false;
+
+                axios.defaults.xsrfHeaderName = "X-CSRFToken";
+                axios.defaults.xsrfCookieName = "csrftoken";
+
+                var bodyFormData = new FormData();
+                bodyFormData.append('json_tree', JSON.stringify(tree));
+                axios.post("/admin/save_categories", bodyFormData)
+                 .then((response) => {
+                    this.saved = true;
+                    this.correct_saved = true;
+                    this.info_success = 'Zapisano poprawnie.'
+                 })
+                 .catch((error) => {
+                    this.saved = true;
+                    this.correct_saved = false;
+                    this.info_success = 'Wystąpił błąd podczas zapisywania.'
+                 });
+
+            }
+        },
+      })
+
+    function getTreeData() {
+        return  categories;
+    }
+
+
+  </script>
+
+{% include "template_elements/pagination.html" %}
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+{% endblock javascripts %}

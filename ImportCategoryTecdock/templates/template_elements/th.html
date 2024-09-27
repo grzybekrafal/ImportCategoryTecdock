@@ -1,0 +1,39 @@
+{% if value %}
+{% load my_tag %}
+
+<th>
+    {% if post_method %}
+        {% if order_by == value %}
+           <a class="sort_order" style="cursor: pointer;" data-order="-{{value}}" onclick="$('#change_sort').val($(this).data('order')); $('#page_form').submit();">
+        {% elif order_by == "-"|add:value %}
+            <a class="sort_order" style="cursor: pointer;" data-order="{{value}}" onclick="$('#change_sort').val($(this).data('order')); $('#page_form').submit();">
+        {% else %}
+           <a class="sort_order" style="cursor: pointer;" data-order="{{value}}" onclick="$('#change_sort').val($(this).data('order')); $('#page_form').submit();">
+        {% endif %}
+    {% else %}
+        {% if order_by == value %}
+           <a href="{{ '-'|add:value|create_sort_url:request }}">
+        {% elif order_by == "-"|add:value %}
+            <a href="{{ value|create_sort_url:request }}">
+        {% else %}
+           <a href="{{ value|create_sort_url:request }}">
+        {% endif %}
+    {% endif %}
+        {{label}}
+        <i class="material-icons sort_icon">
+            {{icon}}
+            {% if order_by == value %}
+                filter_list
+            {% elif order_by == "-"|add:value %}
+                sort
+            {% else %}
+                sort_by_alpha
+            {% endif %}
+        </i>
+    </a>
+</th>
+{% else %}
+    <th>
+        {{label}}
+    </th>
+{% endif %}

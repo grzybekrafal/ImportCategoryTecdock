@@ -1,0 +1,66 @@
+{% load my_tag %}
+
+page_obj=list page=page count=count_products post_type=True
+
+
+<div class="row">
+    <div class="col-12 text-right">
+         <label>Rekordy od {{ page_limit - limit }} do {{ page_limit }} z {{ count }}</label>
+    </div>
+    <div class="col-12">
+        {% if post_type %}
+              <ul class="pagination float-right">
+                {% if page_obj.has_previous %}
+                  <li class="page-item"><a class="page-link postPagination" data-page="{{ page_obj.previous_page_number  }}" >&laquo;</a></li>
+                {% else %}
+                  <li class="page-item disabled"><a class="page-link"><span>&laquo;</span></a></li>
+                {% endif %}
+                {% for i in page_obj.paginator.page_range %}
+                  {% if page_obj.number == i %}
+                    <li class="page-item active"><a class="page-link postPagination" data-page="{{ i }}"><span>{{ i }} <span class="sr-only">(current)</span></span></a></li>
+                  {% else %}
+                    <li  class="page-item"><a class="page-link postPagination" data-page="{{ i }}">{{ i }}</a></li>
+                  {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                  <li class="page-item"><button class="page-link postPagination" data-page="{{ page_obj.next_page_number }}">&raquo;</button></li>
+                {% else %}
+                  <li class="page-item disabled"><button class="page-link" ><span>&raquo;</span></button></li>
+                {% endif %}
+              </ul>
+            <script>
+                window.onload = function(){
+                    $( ".postPagination" ).on( "click", function() {
+                        let page = $(this).data('page')
+                        $('#change_page').val(page);
+                        $('#page_form').submit();
+                    });
+                }
+            </script>
+        {% else %}
+              <ul class="pagination float-right">
+                {% if page_obj.has_previous %}
+                  <li class="page-item"><button class="page-link" href="{{ page_obj.previous_page_number|create_page_url:request }}">&laquo;</button></li>
+                {% else %}
+                  <li class="page-item disabled"><button class="page-link"><span>&laquo;</span></button></li>
+                {% endif %}
+                {% for i in page_obj.paginator.page_range %}
+                  {% if page_obj.number == i %}
+                    <li class="page-item active"><button class="page-link" ><span>{{ i }} <span class="sr-only">(current)</span></span></button></li>
+                  {% else %}
+                    <li  class="page-item"><a class="page-link" href="{{ i|create_page_url:request }}">{{ i }}</a></li>
+                  {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                  <li class="page-item"><a class="page-link" href="{{ page_obj.next_page_number|create_page_url:request }}">&raquo;</a></li>
+                {% else %}
+                  <li class="page-item disabled"><button class="page-link" ><span>&raquo;</span></button></li>
+                {% endif %}
+              </ul>
+        {% endif %}
+    </div>
+    <div class="col-12">
+       <small class="page-item float-right">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.</small>
+    </div>
+</div>
+

@@ -1,0 +1,217 @@
+
+<style>
+.btn-category {
+    padding: 0.40625rem 0.5rem !important;
+    font-size: 0.5rem !important;
+    border-radius: 0.3rem !important;
+}
+.small-tree{
+    font-size: 10px;
+}
+
+.small-tree .tree-arrow.has-child:after{
+    height: 4px;
+    width: 4px;
+}
+
+
+.btn-small-tree{
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+    margin-left: 15px;
+    font-size: 15px !important;
+}
+</style>
+
+    <div id="appTreeCategory" class="small-tree">
+        <b-container fluid>
+
+        <b-row>
+          <b-col cols="12">
+              <b-form-group
+                id="input-group-1"
+                label="Kategoria w nordeno"
+                label-for="input-1"
+              ></b-form-group>
+
+                <b-form-input
+                  id="category_name"
+                  v-model="category"
+                  type="text"
+                  name="category_name"
+                  placeholder="Wybierz kategorie"
+                  required
+                  readonly
+                ></b-form-input>
+
+                  <b-form-input
+                      id="category_id_select"
+                      v-model="category_id"
+                      type="text"
+                      name="category_id"
+                      placeholder="Wybierz kategorie"
+                      required
+                      readonly
+                      hidden
+                    ></b-form-input>
+
+              </b-form-group>
+          </b-col>
+        </b-row>
+        <b-row>
+            <b-col cols="12" v-show="!show_tree">
+                <b-button class="btn-success" @click="selectCategory">Wybierz kategorie</b-button>
+            </b-col>
+          <b-col cols="12" v-show="show_tree">
+             <tree
+                  :data="treeData"
+                  :options="treeOptions"
+                  ref="tree"
+                  @node:checked=""
+                  style=" overflow-y: scroll; max-height: 600px; "
+                />
+             <div slot-scope="{ node }" class="node-container w-100">
+                 <div class="small-tree float-left">
+                     [[ node.text ]]
+                 </div>
+                 <div>
+                     <button type="button" class='btn btn-sm btn-category btn-success btn-small-tree' @click.stop="selectThisCategory(node)" >Wybierz </button>
+                 </div>
+             </div>
+          </b-col>
+        </b-row>
+
+
+        <b-row>
+            <b-col cols="12" v-show="show_alert">
+                <b-alert show variant="danger">[[alert_message]]</b-alert>
+            </b-col>
+        </b-row>
+
+        <hr>
+     </b-container>
+</div>
+
+
+<script>
+
+    var categories_json = '{{ json_category|safe  }}';
+    var categories = JSON.parse(categories_json);
+
+    new Vue({
+        delimiters: ['[[', ']]'],
+        el: '#appTreeCategory',
+        data: () => ({
+          symbol: '',
+          alert_message: 'Przed przejściem do kolejnego kroku wybierz kategorię',
+          show_alert: false,
+          category: '',
+          category_id: '',
+          show_tree: false,
+          treeData: getTreeData(),
+          treeOptions: {
+            propertyNames: {
+              text: 'text',
+              children: 'children',
+              state: 'OPTIONS',
+              editing: false
+            },
+            dnd: false,
+            checkbox: false
+          }
+        }),
+         mounted() {
+        	this.$refs.tree.$on('node:editing:start', (node) => {
+          })
+        	this.$refs.tree.$on('node:editing:stop', (node, isTextChanged) => {
+          })
+        },
+        computed: {
+
+        },
+        methods: {
+            back_to_prev_step(){
+                url_to_prev = "/admin/import_products/"+id+"/step/1";
+                window.location.href = url_to_prev;
+            },
+            save_this_step() {
+
+                if(
+                    (this.category_id != '' && this.categor != '')
+                    &&
+                    (this.symbol != '')
+                ){
+                    axios.defaults.xsrfHeaderName = "X-CSRFToken";
+                    axios.defaults.xsrfCookieName = "csrftoken";
+
+                    var bodyFormData = new FormData();
+                    bodyFormData.append('category', this.category);
+                    bodyFormData.append('category_id', this.category_id);
+                    bodyFormData.append('symbol', this.symbol);
+                    axios.post("/admin/save_new_product", bodyFormData)
+                     .then((response) => {
+                            if(response.data.url !== undefined){
+                                window.location.href = response.data.url
+                                this.show_alert = false;
+                            } else {
+                                if(response.data.exist !== undefined){
+                                    this.alert_message = 'Produkt o takim numerze SYMBOL już jest doda' +
+                                        'ny w tej kategrii';
+                                    this.show_alert = true;
+                                } else {
+                                    this.alert_message = 'Wystąpił błąd podczas zapisu. Zapisz ponownie.';
+                                    this.show_alert = true;
+                                }
+                            }
+                     })
+                     .catch((error) => {
+                            this.alert_message = 'Wystąpił błąd podczas zapisu. Zapisz ponownie.';
+                            this.show_alert = true;
+                     });
+                } else {
+                    this.alert_message = 'Przed dodaniem produktu wybierz kategorię i SYMBOL';
+                    this.show_alert = true;
+                }
+            },
+            selectCategory() {
+                this.show_tree = true;
+            },
+            selectThisCategory(node) {
+                this.category = node.data.name;
+                this.category_id= node.data.id;
+                this.show_tree = false;
+                this.alert_message = "Przed dodaniem produktu wybierz kategorię i SYMBOL";
+                this.show_alert = false;
+            },
+            hasChildren(node) {
+                if(node.children.length == 0){
+                    return true;
+                }
+                return false;
+            },
+            removeNode(node) {
+                if (confirm('Czy na pewno chcesz usunąć ? ')) {
+                  node.remove()
+                }
+            },
+        },
+      })
+
+
+    function readCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+            var c = ca[i];
+            while (c.charAt(0)==' ') c = c.substring(1,c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+    }
+
+    function getTreeData() {
+       return  categories;
+    }
+
+
+</script>

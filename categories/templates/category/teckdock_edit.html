@@ -1,0 +1,157 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Page 404 {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+<style>
+.btn-category {
+    padding: 0.40625rem 0.5rem !important;
+    font-size: 0.5rem !important;
+    border-radius: 0.3rem !important;
+}
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+
+
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header card-header-primary">
+        <h4 class="card-title ">Edycja Kategorii TECKDOCK</h4>
+      </div>
+      <div class="card-body"  >
+          <div class="row">
+            {% include "category/teckdock_tree.html"  %}
+          </div>
+         <!-- Modal -->
+          <div class="modal fade" id="modal_window_category" tabindex="-1" role="dialog" aria-labelledby="modal_window" aria-hidden="true">
+            <div class="modal-dialog" role="document" style="max-width: 70% !important;">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="">Wybierz kategorię do dodania</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                     <form id="form_category_mp">
+
+                           <div class='row'>
+
+                               <label>Tectdock - Katregoria</label>
+                               <input type="hidden" id="modal_window_category_input_teckdock_name"  name="teckdoc_name" value="">
+                               <input type="hidden" id="modal_window_category_input_teckdock_id"  name="teckdoc_id" value="">
+                               <div><b>Nazwa kategorii teckdock: <small style="font-size: 18px" id="textbox_teckdock_name"></small></b></div>
+                               <div>Ścieżka pełna teckdock:
+                                   <b><small style="font-size: 15px" id="modal_window_category_input_path"></small></b>
+                               </div>
+                               {% csrf_token %}
+                           </div>
+
+                           <div><b><small style="font-size: 9px" id="textbox_teckdock_id"></small></b></div>
+
+                            {% include "category/category_select.html"  %}
+                    </form>
+                    <div class='col_12'>
+                        <button type='button' class="form-control btn btn-success" onClick='save_to_this_symbol()'>Zapisz kategorię</button>
+                    </div>
+                   </div>
+                </div>
+
+                <div class="modal-footer " style="display:none">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Zamknij</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+      </div>
+    </div>
+  </div>
+
+
+{% include "template_elements/pagination.html" %}
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+
+
+<script>
+
+
+ function save_to_this_symbol(){
+    let v = jQuery('#category_id_select').val();
+    if(v != '') {
+
+        let csrf_token = $('#form_category_mp').find("input[name='csrfmiddlewaretoken']").val();
+        let category_id =  $('#form_category_mp').find("input[id='category_id_select']").val();
+        let teckdock_id =  $('#form_category_mp').find("input[id='modal_window_category_input_teckdock_id']").val();
+
+        let url = '/admin/category/teckdock_save_info';
+
+        let data = {
+            'csrfmiddlewaretoken': csrf_token,
+            'category_id': category_id,
+            'teckdock_id': teckdock_id
+        };
+
+        save_this_with_ajax_for_teckdock(url, data);
+
+    } else {
+        alert('Wybierz Kategorię');
+    }
+}
+
+function save_this_with_ajax_for_teckdock(url, data){
+        $.ajax({
+            url: url,
+            type: "POST",
+            data: data,
+            success: function(response) {
+                if(response.success) {
+
+                    $('#input_id_'+data.teckdock_id).val(response.category_id);
+                    $('#input_name_'+data.teckdock_id).val(response.category_name);
+                    $('#input_path_'+data.teckdock_id).val(response.category_path);
+                    $('#text_name_'+data.teckdock_id).text(response.category_name);
+                    $('#text_path_'+data.teckdock_id).text(response.category_path);
+
+
+                   swal({
+                    title: 'Zapisano',
+                    html: '',
+                    showCancelButton: false,
+                    icon: 'info',
+                  })
+                    $('#modal_window_category').modal('hide');
+                } else {
+                   swal({
+                    title: 'Błąd zapisu',
+                    html: response.error,
+                    showCancelButton: false,
+                    icon: 'info',
+                  })
+                    $('#modal_window_category').modal('hide');
+                }
+            },
+            error: function(xhr, status, error) {
+              swal({
+                title: 'Błąd zapisu',
+                html: 'Błąd przy próbie zapisu.',
+                showCancelButton: false,
+                icon: 'warning',
+              })
+            }
+        });
+}
+
+
+</script>
+
+{% endblock javascripts %}

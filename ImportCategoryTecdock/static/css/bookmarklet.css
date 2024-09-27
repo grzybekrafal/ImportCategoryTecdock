@@ -1,0 +1,59 @@
+
+#bookmarklet {
+    position:absolute;
+    width: 50%;
+    top: 10px;
+    right: 10px;
+    padding: 50px;
+
+    background: white;
+    border: solid 4px black;
+    z-index: 1000000;
+}
+
+#bookmarklet .images img {
+    width: 100px
+}
+
+#bookmarklet .images .img_mp{
+    position: relative;
+    margin: 5px;
+    margin-bottom: 10px;
+    float: left;
+}
+
+#bookmarklet .images .img_mp .small_btn{
+    visibility: hidden;
+    position: relative;
+    background: red;
+    border: solid 1px black;
+    border-radius: 30px 30px 30px 30px;
+    top:-15px;
+    left:50%;
+    color: #ffffff;
+}
+
+#bookmarklet .images .img_mp:hover .small_btn{
+    visibility: visible;
+
+}
+#bookmarklet .images .img_mp .small_btn:hover{
+    background: red;
+    color: #000000;
+    cursor: pointer;
+}
+
+#bookmarklet  .col_0{
+     width: 100%;
+     display: inline-block;
+}
+
+#bookmarklet  .col_1{
+    width: 49%;
+    float: left;
+}
+
+#bookmarklet  .col_2{
+    width: 49%;
+    float: left;
+}

@@ -1,0 +1,47 @@
+.form-control {
+    margin-bottom: 30px;
+}
+
+input[type="radio"], input[type="checkbox"] {
+    height: 26px;
+}
+.hr-primary {
+    background-color: #9c27b0 !important;
+    margin-bottom: 15px;
+}
+.sort_icon{
+    font-size: 14px;
+}
+
+.pagination  {
+    float: right;
+    margin-right: 10px;
+}
+
+.pagination li {
+    display: list-item;
+    text-align: -webkit-match-parent;
+}
+
+.pagination li a  {
+    display: inline-block;
+    position: relative;
+    display: block;
+    padding: .5rem .75rem;
+    margin-left: -1px;
+    line-height: 1.25;
+    color: #007bff;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+}
+
+.pagination li.active  {
+    z-index: 2;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgb(0 123 255 / 25%);
+}
+
+.dropup, .dropdown {
+    position: relative;
+    cursor: pointer;
+}

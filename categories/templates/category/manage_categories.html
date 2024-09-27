@@ -1,0 +1,208 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Page 404 {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header card-header-primary">
+        <h4 class="card-title ">Lista kategorii</h4>
+        <a href="{% url 'edit_category_tree' %}" class="btn btn-success float-right">Edytuj drzewko kategorii</a>
+      </div>
+
+      <div class="card-body">
+            <div class="row">
+
+               <div class="col-3">
+                  {% include "category/category_selector.html" with url_for_category='/admin/category' %}
+              </div>
+
+              <div class="col-9" >
+                <div class="table-responsive">
+
+                  <table class="table">
+                    <thead class=" text-primary">
+                      {% include "template_elements/th.html" with label='Nazwa' value='name' %}
+                     <th style="width: 20%">Teckdoc Info</th>
+                     <th style="width: 5%">Opcje</th>
+                    </thead>
+                    <tbody>
+                    {% for k in list %}
+                      <tr>
+                        <td>{{ k.name }}</td>
+                         <td>
+                             TeckDOk
+                         </td>
+
+                          <td>
+                              <a href="/admin/category/view/{{k.id}}" class="btn btn-success p-2" data-id="512">Edytuj<div class="ripple-container"></div></a>
+                          </td>
+                       </tr>
+
+                    {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+
+
+          </div>
+
+    </div>
+</div>
+
+{% include "template_elements/pagination.html" %}
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+<script>
+    $( "body" ).on( "click", ".categoryStatusButton",  function() {
+
+        let id = $(this).data('id');
+        let type = $(this).data('type');
+        let column = $(this).data('column');
+        let value = $(this).data('value');
+
+        if (value == 1) {
+            value = 0;
+            $('.'+column+'_yes_'+id).hide()
+            $('.'+column+'_no_'+id).show()
+        } else {
+            value = 1;
+            $('.'+column+'_yes_'+id).show()
+            $('.'+column+'_no_'+id).hide()
+        }
+        $(this).data('value', value);
+
+        $.ajax({
+            type: 'POST',
+            url: "/admin/category/set_special_status/",
+            data: {
+                csrfmiddlewaretoken: window.CSRF_TOKEN,
+                    pk: id, type: type, column:column, value: value
+                },
+                success: function(result) {
+
+                    if (result.categories !== undefined){
+                         result.categories.forEach(element =>{
+
+                            if (column == 'active' || column == 'archive'){
+                                $('.btn_'+column+'_'+element).val(value);
+                                $('.btn_'+column+'_'+element).data( "value", value );
+
+                                if(value){
+                                    $('.'+column+'_yes_'+element).show();
+                                    $('.'+column+'_no_'+element).hide();
+                                } else {
+                                    $('.'+column+'_yes_'+element).hide();
+                                    $('.'+column+'_no_'+element).show();
+                                }
+                            }
+                         }
+                         );
+                    }
+
+                    if(result.type == 'category' && (result.column == 'active' || result.column == 'archive') ){
+                        if (result.column == 'active' || (result.column == 'archive' && value != 1) ){
+
+                            swal({
+                                title: 'Zaktualizowano',
+                                html: 'Status również został ustawiony w kategoriach znajdujących się wewnątrz wybranej kategorii',
+                                showCancelButton: false,
+                             });
+
+                        } else {
+
+                            swal({
+                                title: 'Zaktualizowano',
+                                html: 'Status również został ustawiony w kategoriach znajdujących się wewnątrz wybranej kategorii. Produkty w kategoriach zostały oznaczone jako archiwalne.',
+                                showCancelButton: false,
+                             });
+
+                        }
+                    } else {
+                        swal({
+                            title: 'Zaktualizowano',
+                            html: 'Zaktualizowano status w kategorii',
+                            showCancelButton: false,
+                         });
+                    }
+                },
+                error: function(returnval) {
+                    if (value == 1) {
+                        value = 0;
+                        $('.'+column+'_yes_'+id).hide()
+                        $('.'+column+'_no_'+id).show()
+                    } else {
+                        value = 1;
+                        $('.'+column+'_yes_'+id).show()
+                        $('.'+column+'_no_'+id).hide()
+                    }
+                    $(this).data('value', value);
+
+                     swal({
+                        title: 'Nie Zaktualizowano',
+                        html: 'Wystąpił błąd podczas aktualizowania',
+                        showCancelButton: false,
+                     });
+                },
+             })
+        });
+
+
+
+
+$( "body" ).on( "click", ".categoryStatusButtonForProducts",  function() {
+
+    let id = $(this).data('id');
+    let type = $(this).data('type');
+    let column = $(this).data('column');
+    let category_name = $(this).data('category_name');
+
+    swal({
+            title: 'Czy na pewno chcesz wykonać tą akcje?',
+            html: 'Wszystkie produkty z kategorii ' + category_name + ' będą miały ten sam status co kategoria ',
+            showCancelButton: true,
+            confirmButtonClass: 'btn btn-success',
+            confirmButtonText: 'Tak',
+            cancelButtonClass: 'btn btn-danger',
+            cancelButtonText: 'Nie',
+            buttonsStyling: false
+          }).then(function(result) {
+             if(result.value){
+                $.ajax({
+                    type: 'POST',
+                    url: "/admin/category/set_special_status/",
+                    data: {csrfmiddlewaretoken: window.CSRF_TOKEN,  pk: id, type: type, column: column},
+                    success: function(result) {
+                        swal({
+                            title: 'Zaktualizowano',
+                            html: 'Zaktualizowano produkty',
+                            showCancelButton: false,
+                        });
+                    },
+                    error: function(returnval) {
+                        swal({
+                            title: 'Nie Zaktualizowano',
+                            html: 'Wystąpił błąd podczas aktualizowania',
+                            showCancelButton: false,
+                        });
+                    },
+                })
+             }
+          })
+          .catch(swal.noop);
+});
+
+</script>
+
+{% endblock javascripts %}
